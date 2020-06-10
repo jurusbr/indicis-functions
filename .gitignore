@@ -1,0 +1,10 @@
+/.vscode/
+/venv/
+/dist/
+/build/
+/indicis.egg-info/
+jurus-ia-fb0bec3b96f8.json
+__pycache__/
+*.pyc
+.env*
+*.py.swp

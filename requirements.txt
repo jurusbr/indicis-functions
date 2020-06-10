@@ -1,0 +1,10 @@
+indicis
+beautifulsoup4
+requests
+lxml
+psycopg2
+python-dotenv
+Flask==1.0.2
+sqlalchemy
+pg8000==1.13.2
+pytz
