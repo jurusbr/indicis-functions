@@ -47,14 +47,33 @@ class Repository:
             conn.close()
             logging.error(str(e))
             raise Exception("Nao foi possivel inserir o cdi na base") 
-
-    def ipca_exists(self, data:date) -> bool:
+    
+    def save_di_futuro(self,curve,dtreference):
         try:
-            logging.info("Check if ipca exist at {}".format(date))
+            logging.info("Saving di futuro at {}".format(date))
             conn = self.engine.connect()
             logging.info("Connection opened")
-            stmt = sqlalchemy.text("SELECT * FROM indice where tpindice=3 and date=:date")
+            metadata = sqlalchemy.MetaData(schema="public")
+            tbfuture = sqlalchemy.Table('future', metadata, autoload=True, autoload_with=self.engine)
+            for index in curve:                
+                ins = tbfuture.insert().values(tpindice=2,valor=index[2],dtreference=dtreference,dtcode=index[1],code=index[0])
+                logging.info("Insert nova linha em di futuro")
+                conn.execute(ins)
+            logging.info("Inserido na base com sucesso.")
+            conn.close()
+        except Exception as e:
+            conn.close()
+            logging.error(str(e))
+            raise Exception("Nao foi possivel inserir o cdi na base")   
+
+    def exists(self, idIndice:int, data:date) -> bool:
+        try:
+            logging.info("Check if indice {} exist at {}".format(idIndice,date))
+            conn = self.engine.connect()
+            logging.info("Connection opened")
+            stmt = sqlalchemy.text("SELECT id FROM indice where tpindice=:tpindice and date=:date union SELECT id FROM future where tpindice=:tpindice and dtreference=:date")
             stmt = stmt.bindparams(date=data)
+            stmt = stmt.bindparams(tpindice=idIndice)
 
             result_set = self.engine.execute(stmt) 
 
@@ -64,7 +83,9 @@ class Repository:
         except Exception as e:
             conn.close()
             logging.error(str(e))
-            raise Exception("Nao foi possivel inserir o cdi na base") 
+            raise Exception("Nao foi possivel inserir o indice na base") 
+
+
 
     def create_engine(self):
         if RUNNING_ENV=='cloud':
