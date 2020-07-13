@@ -14,6 +14,57 @@ class Repository:
     def __init__(self):
         self.engine = self.create_engine()
 
+    def get_map_indices(self) -> dict:
+        try:
+            logging.info("Carregando os tipos de indices e seus ids")
+            conn = self.engine.connect()
+            logging.info("Connection opened")
+            stmt = sqlalchemy.text("SELECT id,name FROM tpindice order by id")
+            result_set = self.engine.execute(stmt) 
+            types = {}
+            for row in result_set:     
+                types[row[1]]=row[0]
+            conn.close()
+            return types
+        except Exception as e:
+            conn.close()
+            logging.error(str(e))
+            raise Exception("Nao foi possivel carregar os tipos de indices") 
+
+    def save_indice(self, indice_id: int, valor, data: date):
+        try:
+            logging.info("Saving indice {} date {}".format(str(indice_id), data))
+            conn = self.engine.connect()
+            logging.info("Connection opened")
+            metadata = sqlalchemy.MetaData(schema="public")
+            tbindice = sqlalchemy.Table('indice', metadata, autoload=True, autoload_with=self.engine)
+            ins = tbindice.insert().values(tpindice=indice_id, valor=valor, date=data)
+            conn.execute(ins)
+            logging.info("Inserido na base com sucesso.")
+            conn.close()
+        except Exception as e:
+            conn.close()
+            logging.error(str(e))
+            raise Exception("Nao foi possivel inserir a base")   
+
+    def save_curve(self, indice_id: int, curve, dtreference):
+        try:
+            logging.info("Saving futuro at {}".format(date))
+            conn = self.engine.connect()
+            logging.info("Connection opened")
+            metadata = sqlalchemy.MetaData(schema="public")
+            tbfuture = sqlalchemy.Table('future', metadata, autoload=True, autoload_with=self.engine)
+            for index in curve:                
+                ins = tbfuture.insert().values(tpindice=indice_id,valor=index[2],dtreference=dtreference,dtcode=index[1],code=index[0])
+                logging.info("Insert nova linha em futuro")
+                conn.execute(ins)
+            logging.info("Inserido na base com sucesso.")
+            conn.close()
+        except Exception as e:
+            conn.close()
+            logging.error(str(e))
+            raise Exception("Nao foi possivel inserir o futuro na base")   
+    
     def save_cdi(self,cdi,date):
         try:
             logging.info("Saving cdi {} date {}".format(cdi,date))
@@ -66,6 +117,8 @@ class Repository:
             logging.error(str(e))
             raise Exception("Nao foi possivel inserir o cdi na base")   
 
+    
+    
     def exists(self, idIndice:int, data:date) -> bool:
         try:
             logging.info("Check if indice {} exist at {}".format(idIndice,date))
@@ -124,5 +177,4 @@ class Repository:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     repo = Repository()
-    #repo.save_cdi(4, date(2020,1,1))
-    print(repo.ipca_exists( date(2020,4,1) ))
+    repo.get_map_indices()
