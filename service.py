@@ -25,9 +25,9 @@ class Service:
         data_ref = results[0]
         result = results[1]
 
-        if indice_name == 'IPCA':
+        if data_ref != data:
             if self.indice_cadastrado(indice_id, data_ref):
-                logging.info("{} {} ja cadastrado, abortar execucao.".format(indice_name, data_ref))
+                logging.info("{} possui dataref {} ja cadastrado, abortar execucao.".format(indice_name, data_ref))
                 return
 
         if isinstance(result, dict):
