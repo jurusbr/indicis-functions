@@ -21,24 +21,24 @@ class Service:
         crawler_class = self.dynamic_import("indicis.%s" % indice_name)
         crawler = crawler_class()
         
+        results = crawler.crawler()
+        data_ref = results[0]
+        result = results[1]
+
         if indice_name == 'IPCA':
-            data_crawled, mensal, _ = crawler.crawler()
-            month_and_year = data_crawled.split("/")
-            ipca_data = datetime.date(int(month_and_year[1]),int(month_and_year[0]),1)
-            locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
-            valor = locale.atof(mensal)
-            self.repo.save_indice(indice_id, valor, ipca_data)
-        else:
-            result = crawler.crawler()
-            if isinstance(result, dict):
-                print(result)
-                curve = self.complete_curve(result)
-                if curve:
-                    self.repo.save_curve(indice_id, curve, data)
-                else:
-                    logging.info("Crawler %s return a empty dict, nothing to do" % indice_name)
+            if self.indice_cadastrado(indice_id, data_ref):
+                logging.info("{} {} ja cadastrado, abortar execucao.".format(indice_name, data_ref))
+                return
+
+        if isinstance(result, dict):
+            print(result)
+            curve = self.complete_curve(result)
+            if curve:
+                self.repo.save_curve(indice_id, curve, data)
             else:
-                self.repo.save_indice(indice_id, result, data)
+                logging.info("Crawler %s return a empty dict, nothing to do" % indice_name)
+        else:
+            self.repo.save_indice(indice_id, result, data)
 
     def complete_curve(self, curve):
         wordmap = {"F":1, "G":2, "H":3, "J":4, "K":5, "M":6, "N":7, "Q":8, "U":9, "V":10,"X":11,"Z":12}

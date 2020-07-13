@@ -1,4 +1,4 @@
-indicis==0.0.3
+indicis==0.0.4
 beautifulsoup4
 requests
 lxml
